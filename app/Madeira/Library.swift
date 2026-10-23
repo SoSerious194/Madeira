@@ -2866,6 +2866,12 @@ struct ExecutableBrowser: View {
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
         .task {
             do {
+                // Before the first session or Madeira Dock's setup no prefix exists yet:
+                // make an empty C: drive (seeding still fills it, keyed on its own stamp)
+                // so this shows where to copy games instead of a missing-folder error.
+                if folder.path == LibraryModel.drive.path, !FileManager.default.fileExists(atPath: folder.path) {
+                    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                }
                 // ml1163: .bat and .cmd files are listed too (they run through cmd.exe).
                 files = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles)
                     .filter { ($0.hasDirectoryPath || LibraryModel.programExtensions.contains($0.pathExtension.lowercased())) && $0.resolvingSymlinksInPath().path.hasPrefix(LibraryModel.drive.path + "/") }

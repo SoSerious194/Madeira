@@ -66,11 +66,18 @@ struct CouchHomeView: View {
     private func home(coverHeight: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             CouchTopBar(title: "Home", status: status)
-            Spacer(minLength: 6)
-            CouchGameInfo(game: focusedGame)
-            Spacer(minLength: 10)
-            shelfStack(coverHeight: coverHeight)
-            CouchHintBar(hints: [
+            if shelves.isEmpty {
+                CouchEmptyLibrary(openLibrary: { guideAction(.library) })
+            } else {
+                Spacer(minLength: 6)
+                CouchGameInfo(game: focusedGame)
+                Spacer(minLength: 10)
+                shelfStack(coverHeight: coverHeight)
+            }
+            CouchHintBar(hints: shelves.isEmpty ? [
+                CouchHint(glyph: "A", label: "Madeira library", action: { guideAction(.library) }),
+                CouchHint(glyph: "line.3.horizontal", label: "Menu", action: openGuide),
+            ] : [
                 CouchHint(glyph: "A", label: "Details", action: { handle(.accept) }),
                 CouchHint(glyph: "line.3.horizontal", label: "Menu", action: openGuide),
             ])
@@ -136,6 +143,7 @@ struct CouchHomeView: View {
             focus.move(command, in: shelves)
         case .accept:
             if let game = focusedGame { pageButton = 0; pageID = game.id }
+            else if shelves.isEmpty { guideAction(.library) }
         case .menu:
             openGuide()
         default:

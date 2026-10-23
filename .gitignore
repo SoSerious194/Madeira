@@ -175,3 +175,6 @@ app/CouchPreview/CouchPreview.xcodeproj/
 app/CouchPreview/Info.plist
 app/MadeiraUIShell/MadeiraUIShell.xcodeproj/
 app/MadeiraUIShell/Info.plist
+
+# Personal settings for tools/install-on-phone.sh
+tools/install-on-phone.env

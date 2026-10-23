@@ -393,6 +393,37 @@ jobs:
         shell: bash
         run: bash build/rppairing-ios/build.sh > rppairing.log 2>&1 || { tail -40 rppairing.log; exit 1; }
 
+      # ------------------------------------------------------- Madeira Dock
+      # dockhost.exe (an x86-64 PE, built with llvm-mingw) is a gitignored build
+      # output; without it Madeira hides Madeira Dock and with it every Steam
+      # game. The toolchain archive is pinned by docs/BUILDING.md's SHA-256.
+      - name: Restore llvm-mingw
+        id: mingw
+        uses: actions/cache/restore@v4
+        with:
+          path: toolchains/llvm-mingw-20260421-ucrt-macos-universal
+          key: llvm-mingw-20260421-ucrt-macos-universal
+
+      - name: Fetch llvm-mingw
+        if: steps.mingw.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          URL=https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-ucrt-macos-universal.tar.xz
+          curl -fL --retry 3 -o /tmp/mingw.tar.xz "$URL"
+          echo "bd85a3975723815cef28dbbd2ca2cb0c926f6b348a12a0453f39f7af273cb3f7  /tmp/mingw.tar.xz" | shasum -a 256 -c -
+          mkdir -p toolchains && tar -xJf /tmp/mingw.tar.xz -C toolchains/
+
+      - name: Save llvm-mingw
+        if: steps.mingw.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: toolchains/llvm-mingw-20260421-ucrt-macos-universal
+          key: llvm-mingw-20260421-ucrt-macos-universal
+
+      - name: Build Madeira Dock
+        shell: bash
+        run: bash build/madeira-dock/build.sh > madeira-dock.log 2>&1 || { tail -30 madeira-dock.log; exit 1; }
+
       # ------------------------------------------------------- VC++ runtime
       # The project needs app/Madeira/x86_64-vcruntime (tools/fetch-vcruntime.md).
       # The DLLs are Microsoft's redistributables: they go into this build's
@@ -439,6 +470,7 @@ jobs:
                    External/xxhash/cmake_unofficial/libxxhash.a; do
             [ -f "FEX/build-ios/$a" ] || MISSING="$MISSING FEX/build-ios/$a"
           done
+          [ -f app/Madeira/arm64ec-windows/dockhost.exe ] || MISSING="$MISSING app/Madeira/arm64ec-windows/dockhost.exe"
           [ -z "$MISSING" ] || { echo "::error::missing archives:$MISSING"; exit 1; }
 
       - name: Stage licence copies

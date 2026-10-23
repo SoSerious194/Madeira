@@ -218,6 +218,32 @@ struct CouchStatePill: View {
     }
 }
 
+/// The home screen with no games: what to do next, instead of a blank screen.
+struct CouchEmptyLibrary: View {
+    var openLibrary: () -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Spacer()
+            Image(systemName: "gamecontroller")
+                .font(.system(size: 44, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.7))
+            Text("No games yet")
+                .font(.system(size: 24, weight: .heavy))
+            Text("Sign in to Steam in Madeira's library to see the games you own, or add a game with + there.")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 440)
+            CouchPageButton(label: "Open Madeira library", symbol: "square.grid.2x2.fill", prominent: true,
+                            focused: true, progress: nil, action: openLibrary)
+                .padding(.top, 6)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
 /// Title, JIT state, controller, battery and clock.
 struct CouchTopBar: View {
     let title: String

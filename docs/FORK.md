@@ -30,7 +30,7 @@ list current when you add more.
 | File | Change |
 |---|---|
 | `app/Madeira/ContentView.swift` | `LibraryView(…)` is wrapped in `CouchModeSwitch(play:enableJIT:) { … }` |
-| `app/Madeira/Library.swift` | Settings › Appearance: `CouchModeSettingsSection()` |
+| `app/Madeira/Library.swift` | Settings › Appearance: `CouchModeSettingsSection()`; `ExecutableBrowser` creates a missing `drive_c` (the **+** button before any prefix exists) |
 | `app/Madeira/MadeiraApp.swift` | `@UIApplicationDelegateAdaptor(MadeiraAppDelegate.self)` |
 | `app/Madeira.xcodeproj/project.pbxproj` | The `CouchMode` and `Live` groups and their files (IDs `C1…`, `C2…`, `C4…`) |
 | `README.md` | Rewritten for the fork |
@@ -61,6 +61,40 @@ wait until this fork can build and test on a device:
 - **Engine fixes:** #357, #361, #367, #377, #402, #403, #412.
 - **Controllers:** #347 (XInput battery, and host pads in Windows.Gaming.Input),
   which matters for Couch mode.
+
+## Building and installing on an iPhone
+
+The **Build IPA** workflow (`.github/workflows/build-ipa.yml`) builds an
+unsigned IPA on GitHub's macOS runners. Start it from the Actions tab, or run:
+
+```sh
+gh workflow run build-ipa.yml --repo SoSerious194/Madeira --ref main
+```
+
+A cold run takes about 1.5 hours. With caches, a run takes about 25 minutes
+plus queueing. The IPA is kept for 14 days.
+
+`tools/install-on-phone.sh` downloads the latest successful build, re-signs it
+with your Apple development team and installs it on the connected iPhone,
+using Xcode's own tools. Before the first run:
+
+1. Copy `tools/install-on-phone.env.example` to `tools/install-on-phone.env`
+   (git-ignored) and set your team ID and a bundle ID of your own.
+2. Sign in to that team in Xcode, and connect and unlock the iPhone.
+
+The script makes the provisioning profiles with Xcode when they're missing.
+`--refresh-profiles` renews them, and `--help` lists the other options. A free
+Personal Team can't have the Increased Memory Limit capability, so with one,
+Madeira's Memory+ check stays red.
+
+### CI patches
+
+The workflow changes only its own checkout, never the repository:
+
+- **Wine:** a placeholder for a file the wine fork never committed, and
+  makedep's header-order check downgraded to a warning, so configure finishes.
+- **StikJIT:** `StikJIT.framework`'s Swift 6.4 module interface is rewritten to
+  the older spelling, because the runner's Xcode 26 can't read it.
 
 ## Syncing with Madeira
 

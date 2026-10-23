@@ -121,7 +121,10 @@ Because JIT needs a debugger, Madeira cannot be offered on the App Store.
 
 ## Installing
 
-This fork doesn't publish IPAs yet, so for now [build it from source](#building-from-source).
+This fork doesn't publish IPAs yet. Its **Build IPA** workflow builds one on
+GitHub Actions, and `tools/install-on-phone.sh` signs it with your own Apple
+development team and installs it on your connected iPhone. See
+[`docs/FORK.md`](docs/FORK.md#building-and-installing-on-an-iphone).
 Madeira's official IPAs are on [its releases page](https://github.com/willfaust/Madeira/releases);
 they don't include this fork's changes.
 
