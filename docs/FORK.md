@@ -51,6 +51,7 @@ Madeira reworked can conflict, so compare the two then.
 | [#223](https://github.com/willfaust/Madeira/pull/223) | domainus | Fixes a crash when the Steam connection drops while a request is being sent | 2026-10-23 | `check-steam-session-jobs.py` passes |
 | [#389](https://github.com/willfaust/Madeira/pull/389) | meshoklv | Madeira Dock setup replaces stale Steam registry values and logs what blocked it | 2026-10-23 | Simulator build (its host check needs Linux) |
 | [#413](https://github.com/willfaust/Madeira/pull/413) | NevesHenry | The mouse wheel scrolls vertically instead of sideways | 2026-10-23 | Wheel host checks pass; needs a device with a mouse |
+| [#399](https://github.com/willfaust/Madeira/pull/399) | Jelly-RayTian | ntdll builds with iOS SDKs that lack `rusage_info_v6.ri_page_wait_time_mach` (diagnostic only; logs `pgw=-1.0` then). Needed for the GitHub Actions build, whose newest SDK is iOS 26.2 | 2026-10-23 | `check-rusage-sdk.py` passes |
 
 ### Held back
 
