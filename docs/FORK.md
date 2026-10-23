@@ -40,7 +40,9 @@ list current when you add more.
 ## Community pull requests merged here
 
 These are open pull requests to Madeira, merged into this fork before Madeira
-merged them. Each keeps its author and commit message. When Madeira merges
+merged them. Each keeps its author and commit message as written, except #386:
+its commit named Claude as the author, so here it credits Tomba247, who
+opened the pull request. When Madeira merges
 the same change, the next upstream sync takes it in as well. A change that
 Madeira reworked can conflict, so compare the two then.
 
