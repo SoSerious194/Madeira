@@ -24,6 +24,16 @@ permissions:
   contents: read
 
 jobs:
+  # Host checks that need Linux (fallocate's punch-hole, Linux headers); the
+  # macOS job cannot run them. Each reads only this repository's sources.
+  linux-host-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swap tier core (check-swap-coverage.py)
+        run: python3 tests/host/check-swap-coverage.py
+
   build:
     runs-on: macos-15
     timeout-minutes: 360
