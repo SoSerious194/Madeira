@@ -155,7 +155,7 @@ struct CouchGame: Identifiable, Hashable {
 }
 ```
 
-**Changes to upstream files, as built in phase 2 (two edits plus the project file):**
+**Changes to upstream files, as built in phase 2 (three small edits plus the project file):**
 
 1. `ContentView.swift`: `LibraryView(…)` is wrapped in
    `CouchModeSwitch(play: launchLibraryEntry, enableJIT: enableJIT) { LibraryView(…) }`.
@@ -163,7 +163,11 @@ struct CouchGame: Identifiable, Hashable {
    library otherwise.
 2. `Library.swift`, Settings › Appearance: one line adds
    `CouchModeSettingsSection()`, the Couch mode toggle.
-3. `Madeira.xcodeproj`: a `CouchMode` group (with `Live`) in the app target.
+3. `MadeiraApp.swift`: one `@UIApplicationDelegateAdaptor(MadeiraAppDelegate.self)`
+   line. The delegate's `supportedInterfaceOrientationsFor` holds landscape
+   while Couch mode shows (`CouchMode/Live/CouchOrientation.swift`) and
+   otherwise returns Info.plist's orientations, so nothing else changes.
+4. `Madeira.xcodeproj`: a `CouchMode` group (with `Live`) in the app target.
 
 This replaced the `FrontendChoice` idea. That choice applies at the next
 start, whereas the switch applies at once, and the guide's **Madeira library**

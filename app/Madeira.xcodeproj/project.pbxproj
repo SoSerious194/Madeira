@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C1000009 /* CouchOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2000009 /* CouchOrientation.swift */; };
 		C1000001 /* CouchGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2000001 /* CouchGame.swift */; };
 		C1000002 /* CouchFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2000002 /* CouchFocus.swift */; };
 		C1000003 /* CouchImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2000003 /* CouchImage.swift */; };
@@ -187,6 +188,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C2000009 /* CouchOrientation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CouchOrientation.swift"; sourceTree = "<group>"; };
 		C2000001 /* CouchGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CouchGame.swift"; sourceTree = "<group>"; };
 		C2000002 /* CouchFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CouchFocus.swift"; sourceTree = "<group>"; };
 		C2000003 /* CouchImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CouchImage.swift"; sourceTree = "<group>"; };
@@ -420,6 +422,7 @@
 			isa = PBXGroup;
 			children = (
 				C2000008 /* CouchModeHost.swift */,
+				C2000009 /* CouchOrientation.swift */,
 			);
 			path = Live;
 			sourceTree = "<group>";
@@ -779,6 +782,7 @@
 				C1000006 /* CouchGamePage.swift in Sources */,
 				C1000007 /* CouchGuide.swift in Sources */,
 				C1000008 /* CouchModeHost.swift in Sources */,
+				C1000009 /* CouchOrientation.swift in Sources */,
 				A1000520 /* MadeiraDock.swift in Sources */,
 				A1000521 /* MadeiraDockView.swift in Sources */,
 				A1000650 /* DockStartScreen.swift in Sources */,

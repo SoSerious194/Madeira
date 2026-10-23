@@ -86,7 +86,10 @@ struct CouchModeHost: View {
             .onAppear {
                 keyboardFocus = true
                 refresh()
+                CouchOrientation.hold(landscape: true)
             }
+            // Leaving for the library, or a game session taking over.
+            .onDisappear { CouchOrientation.hold(landscape: false) }
             .onChange(of: scenePhase) { _, phase in if phase == .active { refresh() } }
             .onChange(of: library.current) { _, current in if current != nil { details = nil } }
             .sheet(item: $details) { entry in
