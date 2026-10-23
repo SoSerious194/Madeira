@@ -451,6 +451,21 @@ jobs:
             -c "Set :CFBundleShortVersionString 0.1.${{ github.run_number }}" \
             -c "Set :CFBundleVersion ${{ github.run_number }}" app/Madeira/Info.plist
 
+      # The committed StikJIT.framework (the JIT helper's import) was built with
+      # Swift 6.4, and its module interface uses Swift 6.4's module selectors
+      # (Swift::Sendable), which the runner's Xcode 26 cannot parse. Spell them
+      # the older way: Swift.Sendable, and StikJIT's own names unqualified
+      # (StikJIT has an enum named StikJIT, so StikJIT.X would resolve inside
+      # it). Only the text interface changes, not the compiled framework; both
+      # forms type-check identically with Swift 6.4.
+      - name: "CI patch: StikJIT's module interface for Xcode 26"
+        shell: bash
+        run: |
+          for f in app/Frameworks/StikJIT.xcframework/ios-arm64/StikJIT.framework/Modules/StikJIT.swiftmodule/*.swiftinterface; do
+            perl -pi -e 's/\bStikJIT:://g; s/\b(Swift|Foundation|_Concurrency|JavaScriptCore)::/$1./g' "$f"
+            echo "$f: $(grep -c '::' "$f") module selectors left"
+          done
+
       # docs/BUILDING.md: Debug is the configuration that runs games.
       - name: Build the app (Debug, unsigned)
         shell: bash
