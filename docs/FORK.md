@@ -29,9 +29,10 @@ list current when you add more.
 
 | File | Change |
 |---|---|
-| `app/Madeira/ContentView.swift` | `LibraryView(…)` is wrapped in `CouchModeSwitch(play:enableJIT:) { … }` |
+| `app/Madeira/ContentView.swift` | `LibraryView(…)` is wrapped in `CouchModeSwitch(play:enableJIT:) { … }`; the two `LibraryView` lines stay byte-identical to upstream, as `tests/host/check-onboarding.py` reads them |
 | `app/Madeira/Library.swift` | Settings › Appearance: `CouchModeSettingsSection()`; `ExecutableBrowser` creates a missing `drive_c` (the **+** button before any prefix exists) |
 | `app/Madeira/MadeiraApp.swift` | `@UIApplicationDelegateAdaptor(MadeiraAppDelegate.self)` |
+| `app/Madeira/Onboarding.swift` | Setup offers Madeira Dock's client page once more when it was never shown and the client is missing (`offerDockClient`, `madeiraOnboardingDockClientOffered`); Couch mode's Play opens that page too |
 | `app/Madeira.xcodeproj/project.pbxproj` | The `CouchMode` and `Live` groups and their files (IDs `C1…`, `C2…`, `C4…`) |
 | `README.md` | Rewritten for the fork |
 | `.gitignore` | The generated Xcode projects of `app/CouchPreview` and `app/MadeiraUIShell` |

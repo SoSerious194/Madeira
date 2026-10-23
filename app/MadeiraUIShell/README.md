@@ -40,3 +40,8 @@ python3 seed-library.py "$(xcrun simctl get_app_container booted dev.madeira.uis
 
 When Madeira calls a new engine function, the link fails with its name; add
 a stub for it there.
+
+`dock-stub/arm64ec-windows/dockhost.exe` is an empty stand-in for Madeira
+Dock's program. Madeira only checks that it's bundled, so with it the Steam
+section, Madeira Dock's settings and the Steam client setup page all show. It
+never runs.

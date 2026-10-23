@@ -121,7 +121,14 @@ enum OnboardingRules {
     /// The revision this device had seen when setup opened by itself after an update (only
     /// the pages added since are shown); 0 for a new install and for Run setup again.
     @Published private(set) var since = 0
-    var steps: [Step] { steps(since: since) }
+    var steps: [Step] { dockClientOnly ? [.welcome, .dockClient, .done] : steps(since: since) }
+
+    /// Setup can finish without Madeira Dock's client page: on a build without Dock in it
+    /// (this fork's first cloud build had none). Once Dock is in the app and Valve's client
+    /// is still missing, setup opens once more with only that page (presentIfNeeded), and
+    /// Couch mode's Play opens it whenever the client is missing (offerDockClient).
+    static let dockClientOfferedKey = "madeiraOnboardingDockClientOffered"
+    private var dockClientOnly = false
     private func steps(since: Int) -> [Step] {
         OnboardingRules.steps(signIn: SteamSignIn.isEnabled, dock: MadeiraDock.enabled, localDevVPN: offerLocalDevVPN,
                               wineMono: offerWineMono, since: since)
@@ -137,12 +144,25 @@ enum OnboardingRules {
         guard !considered else { return }
         considered = true
         offerWineMono = !WineMonoModel.available
+        if Self.seen >= OnboardingRules.revision, MadeiraDock.enabled, !MadeiraDock.clientInstalled,
+           !UserDefaults.standard.bool(forKey: Self.dockClientOfferedKey) {
+            offerDockClient()
+            return
+        }
         guard OnboardingRules.shouldShow(seen: Self.seen, enabled: Self.enabled, steps: steps(since: Self.seen)) else { return }
         open(reason: "revision \(Self.seen)->\(OnboardingRules.revision)", since: Self.seen)
     }
 
     /// Settings › Steam › Run setup again.
     func rerun() { open(reason: "settings", since: 0) }
+
+    /// Setup with only Madeira Dock's client page.
+    func offerDockClient() {
+        guard MadeiraDock.enabled else { return }
+        dockClientOnly = true
+        open(reason: "dock-client", since: 0)
+        if !presented { dockClientOnly = false }   // a session is running: not now
+    }
 
     private func open(reason: String, since: Int) {
         // Never over a running session.
@@ -157,6 +177,7 @@ enum OnboardingRules {
 
     func go(_ next: Step) {
         step = next
+        if next == .dockClient { UserDefaults.standard.set(true, forKey: Self.dockClientOfferedKey) }
         LogStore.shared.log("[onboarding] step=\(next.rawValue)")
     }
 
@@ -181,6 +202,7 @@ enum OnboardingRules {
     private func close() {
         EndedSessionSurface.hide(reason: "setup-closed")
         presented = false
+        dockClientOnly = false
     }
 }
 

@@ -52,6 +52,9 @@ struct CouchModeHost: View {
     @ObservedObject private var cloud = SteamCloudSetting.shared
     @ObservedObject private var jit = LibraryJITState.shared
     @ObservedObject private var controller = LibraryController.shared
+    // First-run setup, and Madeira Dock's client page (OnboardingModel), shown over
+    // Couch mode as LibraryView shows them over the library.
+    @ObservedObject private var onboarding = OnboardingModel.shared
     @Environment(\.scenePhase) private var scenePhase
     @State private var details: LibraryEntry?
     @State private var keys = PassthroughSubject<CouchCommand, Never>()
@@ -87,11 +90,13 @@ struct CouchModeHost: View {
                 keyboardFocus = true
                 refresh()
                 CouchOrientation.hold(landscape: true)
+                onboarding.presentIfNeeded()
             }
             // Leaving for the library, or a game session taking over.
             .onDisappear { CouchOrientation.hold(landscape: false) }
             .onChange(of: scenePhase) { _, phase in if phase == .active { refresh() } }
             .onChange(of: library.current) { _, current in if current != nil { details = nil } }
+            .fullScreenCover(isPresented: $onboarding.presented) { OnboardingView() }
             .sheet(item: $details) { entry in
                 LibraryDetail(entry: entry, play: { profile in
                     details = nil
@@ -153,6 +158,12 @@ struct CouchModeHost: View {
     // MARK: - Actions
 
     private func start(_ game: CouchGame) {
+        // A Steam game starts through Madeira Dock, which needs Valve's client
+        // components: open their download page rather than fail with an error.
+        if game.isSteam, MadeiraDock.enabled, !MadeiraDock.clientInstalled {
+            onboarding.offerDockClient()
+            return
+        }
         guard let entry = entry(for: game) else {
             library.error = "\(game.title) isn't installed yet."
             return

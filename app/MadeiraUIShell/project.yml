@@ -45,6 +45,10 @@ targets:
         type: folder
       - path: ../Madeira/licenses
         type: folder
+      # An empty stand-in for Madeira Dock's dockhost.exe, so the app shows Madeira
+      # Dock's screens (Madeira only checks the file is bundled). It never runs here.
+      - path: dock-stub/arm64ec-windows
+        type: folder
     info:
       path: Info.plist
       properties:
