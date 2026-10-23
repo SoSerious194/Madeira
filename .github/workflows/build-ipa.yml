@@ -48,8 +48,13 @@ jobs:
       - name: Install build tools
         shell: bash
         run: |
-          brew install bison ninja meson cabextract msitools
+          brew install bison ninja meson cabextract msitools llvm lld
           echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
+          # On an arm64 host Wine's configure requires a PE cross-compiler,
+          # even for its host tools. Homebrew's clang, lld and llvm-dlltool go
+          # on the PATH only in the Wine configure steps (WINE_PE_PATH), so the
+          # iOS builds keep Xcode's toolchain.
+          echo "WINE_PE_PATH=$(brew --prefix llvm)/bin:$(brew --prefix lld)/bin" >> "$GITHUB_ENV"
           rustup target add aarch64-apple-ios
 
       - name: Source revisions
@@ -100,11 +105,12 @@ jobs:
         shell: bash
         run: |
           mkdir -p wine/build-native && cd wine/build-native
+          export PATH="$WINE_PE_PATH:$PATH"
           ../configure > "$GITHUB_WORKSPACE/wine-native-configure.log" 2>&1 || true
           N=$(sysctl -n hw.ncpu)
           { make -j"$N" __tools__ && make -j"$N" include; } > "$GITHUB_WORKSPACE/wine-native-make.log" 2>&1 \
             || make -k -j"$N" >> "$GITHUB_WORKSPACE/wine-native-make.log" 2>&1 || true
-          [ -x tools/widl/widl ] || { echo "::error::Wine host tools did not build"; tail -40 "$GITHUB_WORKSPACE/wine-native-make.log"; exit 1; }
+          [ -x tools/widl/widl ] || { echo "::error::Wine host tools did not build"; tail -15 "$GITHUB_WORKSPACE/wine-native-configure.log"; tail -40 "$GITHUB_WORKSPACE/wine-native-make.log"; exit 1; }
 
       - name: Save Wine host tools
         if: steps.winenative.outputs.cache-hit != 'true'
@@ -117,6 +123,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p wine/build-macos && cd wine/build-macos
+          export PATH="$WINE_PE_PATH:$PATH"
           CC="xcrun -sdk iphoneos clang -arch arm64 -miphoneos-version-min=$IOS_MIN"
           ../configure --enable-win64 --disable-tests \
             CC="$CC" CROSSCC="$CC" \
