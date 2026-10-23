@@ -1288,8 +1288,11 @@ struct ContentView: View {
                     sessionBody
                         .navigationBarHidden(true)
                 } else if library.enabled {
-                    LibraryView(play: launchLibraryEntry, enableJIT: enableJIT,
-                                startDock: { startDock($0, compactPool: $1) })
+                    // Couch mode, when it is on, shows instead of the library (CouchMode/Live).
+                    CouchModeSwitch(play: launchLibraryEntry, enableJIT: enableJIT) {
+                        LibraryView(play: launchLibraryEntry, enableJIT: enableJIT,
+                                    startDock: { startDock($0, compactPool: $1) })
+                    }
                 } else {
                     developerBody
                 }

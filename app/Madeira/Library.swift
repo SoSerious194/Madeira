@@ -2614,6 +2614,7 @@ struct LibraryView: View {
                     Text("Flowing chrome on the bars and the Desktop button. Off, they use the system's Liquid Glass.")
                 }
             }
+            if settingsShow("couch mode", "controller", "big picture", "tv") { CouchModeSettingsSection() }
             if settingsShow("interface", "developer") {
                 Section {
                     Toggle("Use developer interface", isOn: Binding(get: { developerUI }, set: { on in

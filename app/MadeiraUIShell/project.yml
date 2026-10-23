@@ -1,0 +1,65 @@
+# Madeira's own, unmodified UI in the iOS Simulator, for comparing it with
+# Couch mode. The engine (FEX, Wine, DXMT, in-app pairing) is replaced by
+# EngineStubs.m, so games cannot start; everything else is app/Madeira as is.
+# Generate with `xcodegen` in this folder.
+name: MadeiraUIShell
+options:
+  bundleIdPrefix: dev.madeira
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  MadeiraUIShell:
+    type: application
+    platform: iOS
+    sources:
+      - path: EngineStubs.m
+      - path: ../Madeira
+        excludes:
+          # The engine bridges, replaced by EngineStubs.m.
+          - FEXBridge.mm
+          - WineServerBridge.m
+          - WineProcessBridge.m
+          - IOSDisplayShim.m
+          - wine_stubs.c
+          # Windows-side files the app copies into its prefix; not needed for the UI.
+          - aarch64-windows/**
+          - arm64ec-windows/**
+          - i386-windows/**
+          - d3d12/**
+          - nls/**
+          - "*.a"
+          - Info.plist
+          - "*.entitlements"
+          - "prefix-template.tar.gz"
+          - hello_x86.elf
+          - "*.metal"
+          - legal/**
+          - licenses/**
+      # Folder references, as in Madeira's project (the same file names occur in both).
+      - path: ../Madeira/legal
+        type: folder
+      - path: ../Madeira/licenses
+        type: folder
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: Madeira (UI only)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        GCSupportsControllerUserInteraction: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.madeira.uishell
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_OBJC_BRIDGING_HEADER: ../Madeira/Madeira-Bridging-Header.h
+        CODE_SIGN_STYLE: Automatic
