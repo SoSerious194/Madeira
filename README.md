@@ -3,20 +3,79 @@
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/4t5mNjwCn7"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscord.com%2Fapi%2Finvites%2F4t5mNjwCn7%3Fwith_counts%3Dtrue&query=%24.approximate_member_count&suffix=%20members&label=Discord&logo=discord&logoColor=white&color=5865F2&style=for-the-badge" alt="Join the Madeira Discord"></a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/willfaust/Madeira/releases"><img src="https://img.shields.io/github/v/release/willfaust/Madeira?label=Release&style=for-the-badge&color=brightgreen" alt="Latest release"></a>
-  &nbsp;&nbsp;&nbsp;
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0--or--later-yellow?style=for-the-badge" alt="License: GPL-3.0-or-later"></a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/willfaust/Madeira"><img src="https://img.shields.io/badge/Fork_of-willfaust%2FMadeira-555?style=for-the-badge&logo=github" alt="Fork of willfaust/Madeira"></a>
 </p>
 
-Madeira runs Windows PC games on an iPhone, with no jailbreak. Games run as they
-are, unmodified, inside a single iOS app.
+This is an independent fork of [Madeira](https://github.com/willfaust/Madeira),
+which runs Windows PC games on an iPhone with no jailbreak. The games run
+unmodified, inside a single iOS app.
+
+The fork follows Madeira closely and adds its own features on top. The first
+is **Couch mode**, a full-screen, controller-first library in the spirit of
+Steam's Big Picture.
+
+> [!IMPORTANT]
+> This is **not the official Madeira**, and it is not affiliated with or
+> endorsed by its authors. Please report problems with this fork
+> [here](https://github.com/SoSerious194/Madeira/issues), not to the Madeira
+> project or its Discord.
 
 > [!NOTE]
-> Madeira is an active research project. Many games start and some play well,
-> but performance and compatibility vary from game to game, and things change
-> quickly. Expect rough edges.
+> Madeira is an active research project, and so is this fork. Many games start
+> and some play well, but performance and compatibility vary from game to game,
+> and things change quickly. Expect rough edges.
+
+## What this fork adds
+
+### Couch mode
+
+A full-screen library for playing with a controller, designed for landscape.
+Turn it on in **Settings › Appearance › Couch mode**.
+
+- **Home**: the focused game's artwork fills the screen behind its logo, its
+  status and playtime. Below are shelves of covers: **Continue playing**,
+  **Installed**, **Library** (Steam games not installed yet) and **Other
+  games**.
+- **Game page**: press A for **Play**, **Install** (with live download
+  progress) or **Properties**, which opens Madeira's own per-game settings.
+- **Guide**: press Start for Home, the standard Madeira library, Settings and
+  JIT status.
+- **Input**: D-pad or stick to move, A to select, B to go back. Each shelf
+  remembers where you left it. A hardware keyboard and touch work too.
+- **Orientation**: the app holds landscape while Couch mode is open, and goes
+  back to normal when you leave it.
+
+It's built from Madeira's own library, Steam and launch code, so games start
+exactly as they do from the standard library. The design and status are in
+[`docs/COUCH_MODE_PLAN.md`](docs/COUCH_MODE_PLAN.md).
+
+### Fixes ahead of upstream
+
+Some fixes from open [Madeira pull requests](https://github.com/willfaust/Madeira/pulls)
+are merged here before upstream merges them, with their authors kept. One
+example is a fix for a crash when the Steam connection drops mid-request. The
+list is in [`docs/FORK.md`](docs/FORK.md#community-pull-requests-merged-here).
+
+### Working on the interface without a device
+
+- [`app/CouchPreview`](app/CouchPreview): Couch mode with sample games, in the
+  iOS Simulator.
+- [`app/MadeiraUIShell`](app/MadeiraUIShell): the whole app's real interface
+  in the iOS Simulator, with the engine stubbed out. Games can't start in it.
+
+## How this fork relates to Madeira
+
+- **Changes from Madeira come in.** The fork regularly merges Madeira's `main`,
+  so its engine work, game fixes and features arrive here too.
+- **Changes from here don't go back.** This fork doesn't open pull requests
+  against Madeira; it develops on its own.
+- **Selected community fixes** from Madeira's open pull requests may be merged
+  early, after review and a build check.
+
+[`docs/FORK.md`](docs/FORK.md) records the upstream commit this fork is synced
+to, which pull requests were merged early, and how to sync.
 
 ## How it works
 
@@ -32,14 +91,15 @@ Wine's server runs as a thread instead of a separate program.
 
 ## Features
 
+- **Couch mode** (this fork): a controller-first, full-screen library, as
+  described above.
 - **Game library** with artwork, search and a Windows desktop session.
 - **Steam**: sign in, browse the games you own, install and update them, and
   start them through Valve's own Windows Steam client (Madeira Dock).
 - **Steam Cloud saves**: saves sync with Steam Cloud when Madeira starts and
   before a game starts, and **Upload saves and close Madeira** in the game
-  menu sends them when you stop playing. Saves that
-  changed on both sides are never overwritten without asking, and anything a
-  sync replaces is backed up.
+  menu sends them when you stop playing. Saves that changed on both sides are
+  never overwritten without asking, and anything a sync replaces is backed up.
 - **Controllers**: Bluetooth controllers through XInput, plus customisable
   on-screen touch controls.
 - **Keyboard, mouse and trackpad** passed through to games as real input.
@@ -61,13 +121,18 @@ Because JIT needs a debugger, Madeira cannot be offered on the App Store.
 
 ## Installing
 
-1. Download the IPA from the [latest release](https://github.com/willfaust/Madeira/releases).
-2. Sideload it with your own Apple ID using SideStore, AltStore, Sideloadly,
+This fork doesn't publish IPAs yet, so for now [build it from source](#building-from-source).
+Madeira's official IPAs are on [its releases page](https://github.com/willfaust/Madeira/releases);
+they don't include this fork's changes.
+
+With an IPA:
+
+1. Sideload it with your own Apple ID using SideStore, AltStore, Sideloadly,
    Plume or a similar tool.
-3. Open Madeira and enable JIT. Automatic mode uses StikDebug when installed,
+2. Open Madeira and enable JIT. Automatic mode uses StikDebug when installed,
    otherwise it guides you through the built-in setup; see
    [JIT setup](docs/JIT.md).
-4. In **Settings**, check that **JIT** and **Memory+** both show a green check:
+3. In **Settings**, check that **JIT** and **Memory+** both show a green check:
    Madeira then says **Ready to play**.
 
 Some 64-bit games need Microsoft's Visual C++ runtime, which is not included
@@ -76,7 +141,7 @@ Some 64-bit games need Microsoft's Visual C++ runtime, which is not included
 ## Building from source
 
 ```sh
-git clone --recurse-submodules https://github.com/willfaust/Madeira.git
+git clone --recurse-submodules https://github.com/SoSerious194/Madeira.git
 ```
 
 `FEX`, `wine`, `dxmt` and `madeira-dock` are submodules that point at Madeira's
@@ -85,11 +150,18 @@ own forks; upstream checkouts will not build here. The build has several parts
 and some inputs that are not in the repository, such as the toolchains.
 [`docs/BUILDING.md`](docs/BUILDING.md) walks through all of it.
 
+For interface work only, [`app/MadeiraUIShell`](app/MadeiraUIShell/README.md)
+and [`app/CouchPreview`](app/CouchPreview/README.md) build in a few minutes
+with Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen), and need
+none of the engine build.
+
 ### Repository layout
 
 | Path | Contents |
 |---|---|
 | [`app/`](app) | The iOS app: SwiftUI front end, Wine bridge and bundled resources |
+| [`app/Madeira/CouchMode/`](app/Madeira/CouchMode) | Couch mode (this fork); `Live/` connects it to the app |
+| [`app/CouchPreview/`](app/CouchPreview), [`app/MadeiraUIShell/`](app/MadeiraUIShell) | Simulator builds for interface work (this fork) |
 | [`wine/`](https://github.com/willfaust/wine), [`FEX/`](https://github.com/willfaust/FEX), [`dxmt/`](https://github.com/willfaust/dxmt), [`madeira-dock/`](https://github.com/willfaust/madeira-dock) | Madeira's forks and the Steam client launcher (submodules) |
 | [`madeira-d3d12/`](madeira-d3d12) | The native Direct3D 12 runtime |
 | [`build/`](build) | Build scripts and iOS-side sources, one folder per component |
@@ -102,6 +174,8 @@ and some inputs that are not in the repository, such as the toolchains.
 
 | Topic | Document |
 |---|---|
+| This fork: upstream sync and merged pull requests | [`docs/FORK.md`](docs/FORK.md) |
+| Couch mode: design, status and plans | [`docs/COUCH_MODE_PLAN.md`](docs/COUCH_MODE_PLAN.md) |
 | Building from a clean checkout | [`docs/BUILDING.md`](docs/BUILDING.md) |
 | StikDebug and built-in JIT setup | [`docs/JIT.md`](docs/JIT.md) |
 | The game library | [`docs/LIBRARY.md`](docs/LIBRARY.md) |
@@ -116,13 +190,15 @@ and some inputs that are not in the repository, such as the toolchains.
 
 ## Licensing
 
-Madeira is licensed under **GPL-3.0-or-later** ([`LICENSE`](LICENSE)) with
-the **Madeira Converter Exception** ([`LICENSE-EXCEPTION.md`](LICENSE-EXCEPTION.md)),
+This fork is a modified version of Madeira. It is distributed under the same
+terms as Madeira: **GPL-3.0-or-later** ([`LICENSE`](LICENSE)) with the
+**Madeira Converter Exception** ([`LICENSE-EXCEPTION.md`](LICENSE-EXCEPTION.md)),
 an additional permission that allows it to work with Apple's Metal Shader
-Converter.
+Converter. The fork's own changes are under the same terms. They are listed in
+[`docs/FORK.md`](docs/FORK.md), and the git history records each one.
 
-The projects it builds on keep their own licenses upstream, but Madeira's forks
-are not all licensed the same way as their upstreams:
+The projects Madeira builds on keep their own licenses upstream, but Madeira's
+forks are not all licensed the same way as their upstreams:
 
 | Component | License |
 |---|---|
@@ -142,8 +218,10 @@ build with them, supply them yourself as described in
 
 ## Contributing
 
-Contributions are welcome under GPL-3.0-or-later; see
-[`CONTRIBUTING.md`](CONTRIBUTING.md).
+Issues and pull requests for this fork are welcome
+[here](https://github.com/SoSerious194/Madeira), under GPL-3.0-or-later; see
+[`CONTRIBUTING.md`](CONTRIBUTING.md). Changes to Madeira itself belong in
+[Madeira's repository](https://github.com/willfaust/Madeira).
 
 Madeira's forks contain a lot of AI-assisted work. FEX-Emu does not accept
 AI-generated code, so please **do not send changes from these forks upstream**
@@ -151,6 +229,15 @@ to FEX-Emu, and check each upstream project's contribution policy before
 proposing anything to it.
 
 ## Credits
+
+This fork:
+
+- **SoSerious194** ([@SoSerious194](https://github.com/SoSerious194)):
+  maintains this fork; Couch mode
+- The authors of the Madeira pull requests merged here, credited on their
+  commits and in [`docs/FORK.md`](docs/FORK.md)
+
+Madeira:
 
 - **Will Faust** ([@willfaust](https://github.com/willfaust)): created Madeira
 - **Nick** ([@125hz](https://github.com/125hz)): 32-bit game support, the game library and Madeira Dock
@@ -168,7 +255,3 @@ frontend by David Acevedo (dacevedo12), [rpmalloc](https://github.com/mjansson/r
 by Mattias Jansson, [StikDebug](https://github.com/StikDebug/StikDebug),
 [StikJIT](https://github.com/StikDebug/StikJIT) and
 [idevice](https://github.com/jkcoxson/idevice) for enabling JIT. Thank you to everyone who contributes to them.
-
-<p align="center">
-  <a href="https://discord.gg/4t5mNjwCn7"><b>Join the community on Discord</b></a>
-</p>
