@@ -67,6 +67,23 @@ jobs:
           echo "WINE_PE_PATH=$(brew --prefix llvm)/bin:$(brew --prefix lld)/bin" >> "$GITHUB_ENV"
           rustup target add aarch64-apple-ios
 
+      # Madeira's host checks that expect the fork's build-ipa.yml to run them.
+      - name: Check eco-native
+        run: python3 tests/host/check-eco-native.py
+      - name: Check power-probe
+        run: python3 tests/host/check-power-probe.py
+      - name: Check lean-diag
+        run: python3 tests/host/check-lean-diag.py
+      - name: Host checks (server, logging, D3D12, images, VC++ runtime)
+        run: |
+          python3 tests/host/check-quiet-log.py
+          python3 tests/host/check-srv-direct.py
+          python3 tests/host/check-srv-eco-follow.py
+          python3 tests/host/check-srv-fd-reply.py
+          python3 tests/host/check-msc-unbounded-retry.py
+          python3 tests/host/check-x64-image-nocopy.py
+          python3 tests/host/check-vcruntime-mfc.py
+
       - name: Source revisions
         id: rev
         shell: bash
@@ -435,35 +452,53 @@ jobs:
         run: bash build/madeira-dock/build.sh > madeira-dock.log 2>&1 || { tail -30 madeira-dock.log; exit 1; }
 
       # ------------------------------------------------------- VC++ runtime
-      # The project needs app/Madeira/x86_64-vcruntime (tools/fetch-vcruntime.md).
-      # The DLLs are Microsoft's redistributables: they go into this build's
-      # IPA only and are never committed.
-      - name: Fetch the VC++ runtime from Microsoft
+      # The project needs app/Madeira/x86_64-vcruntime (tools/fetch-vcruntime.md):
+      # Microsoft's twelve runtime DLLs and MFC's two (mfc140, mfc140u; Madeira
+      # links MFC unless MADEIRA_MFC=0). They are Microsoft's redistributables:
+      # they go into this build's IPA only and are never committed.
+      - name: Fetch the VC++ runtime DLLs from Microsoft
         shell: bash
         run: |
           set +e
           DEST=app/Madeira/x86_64-vcruntime; mkdir -p "$DEST"
-          WANT="concrt140 msvcp140 msvcp140_1 msvcp140_2 msvcp140_atomic_wait msvcp140_codecvt_ids vcamp140 vccorlib140 vcomp140 vcruntime140 vcruntime140_1 vcruntime140_threads"
+          WANT="concrt140.dll msvcp140.dll msvcp140_1.dll msvcp140_2.dll msvcp140_atomic_wait.dll msvcp140_codecvt_ids.dll vcamp140.dll vccorlib140.dll vcomp140.dll vcruntime140.dll vcruntime140_1.dll vcruntime140_threads.dll mfc140.dll mfc140u.dll"
+          NWANT=$(echo $WANT | wc -w | tr -d ' ')
           curl -fL --retry 3 -o /tmp/vcr.exe https://aka.ms/vs/17/release/vc_redist.x64.exe || { echo "::warning::VC++ runtime download failed"; exit 0; }
           rm -rf /tmp/vcx; mkdir -p /tmp/vcx
           cabextract -q -d /tmp/vcx /tmp/vcr.exe
-          # Unwrap nested cabinets and MSIs a few levels deep.
+          # A DLL's arm64 build carries the same name: take the one whose PE
+          # header says x86-64 (machine == 0x8664).
+          is_x64() {
+            python3 -c "import struct,sys; d=open(sys.argv[1],'rb').read(); pe=struct.unpack_from('<I',d,0x3c)[0]; sys.exit(0 if d[pe:pe+4]==b'PE\0\0' and struct.unpack_from('<H',d,pe+4)[0] == 0x8664 else 1)" "$1" 2>/dev/null
+          }
+          collect() {
+            FOUND=0
+            for d in $WANT; do
+              base="${d%.dll}"
+              while read -r cand; do
+                if is_x64 "$cand"; then cp "$cand" "$DEST/$d"; FOUND=$((FOUND+1)); break; fi
+              done < <(find /tmp/vcx -type f \( -iname "$base.dll*" -o -iname "F_CENTRAL_${base}_*" \))
+            done
+          }
+          # Unwrap nested cabinets and MSIs until every DLL turns up.
           for pass in 1 2 3 4; do
             find /tmp/vcx -type f -size +20k ! -name "*.dll*" ! -name "*_amd64" ! -name "*_arm64" ! -name "*_x86" | while read -r f; do
               [ -d "$f.d" ] && continue; mkdir -p "$f.d"
               cabextract -q -d "$f.d" "$f" >/dev/null 2>&1 || msiextract -C "$f.d" "$f" >/dev/null 2>&1 || rmdir "$f.d"
             done
+            collect
+            [ "$FOUND" -eq "$NWANT" ] && break
           done
-          # Take each DLL whose PE header says x86-64; the arm64 copies share the names.
-          FOUND=0
-          for base in $WANT; do
-            while read -r cand; do
-              if python3 -c "import struct,sys; d=open(sys.argv[1],'rb').read(); pe=struct.unpack_from('<I',d,0x3c)[0]; sys.exit(0 if d[pe:pe+4]==b'PE\0\0' and struct.unpack_from('<H',d,pe+4)[0]==0x8664 else 1)" "$cand" 2>/dev/null; then
-                cp "$cand" "$DEST/$base.dll"; FOUND=$((FOUND+1)); break
-              fi
-            done < <(find /tmp/vcx -type f \( -iname "$base.dll*" -o -iname "F_CENTRAL_${base}_*" \))
-          done
-          echo "::notice::VC++ runtime: $FOUND of 12 DLLs"
+          echo "::notice::VC++ runtime: recovered $FOUND of $NWANT"
+
+      - name: Report vcruntime contents
+        shell: bash
+        run: |
+          shopt -s nullglob
+          DLLS=(app/Madeira/x86_64-vcruntime/*.dll)
+          echo "x86_64-vcruntime DLLs present: ${#DLLS[@]} of 14"
+          [ "${#DLLS[@]}" -lt 14 ] && echo "::warning::games built with MSVC or MFC may not start until the missing DLLs are added (tools/fetch-vcruntime.md)"
+          exit 0
 
       # ----------------------------------------------------------------- app
       - name: Check every linked archive is present

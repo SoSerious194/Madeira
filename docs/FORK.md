@@ -9,7 +9,9 @@ its own features. It doesn't send pull requests back to Madeira.
 
 | Upstream | Commit | Date |
 |---|---|---|
-| willfaust/Madeira `main` | [`279fd0f`](https://github.com/willfaust/Madeira/commit/279fd0f) "Record bahacan16's pull requests as merged" | 2026-10-15 |
+| willfaust/Madeira `main` | [`e3a88fd`](https://github.com/willfaust/Madeira/commit/e3a88fd) "Record wave 3's pull requests as merged" | 2026-10-23 |
+
+The previous sync point was `279fd0f` (2026-10-15).
 
 Update this table after each upstream merge.
 
@@ -35,9 +37,16 @@ list current when you add more.
 | `app/Madeira/Onboarding.swift` | Setup offers Madeira Dock's client page once more when it was never shown and the client is missing (`offerDockClient`, `madeiraOnboardingDockClientOffered`); Couch mode's Play opens that page too |
 | `app/Madeira.xcodeproj/project.pbxproj` | The `CouchMode` and `Live` groups and their files (IDs `C1…`, `C2…`, `C4…`) |
 | `README.md` | Rewritten for the fork |
+| `tests/host/check-lean-diag.py`, `tests/host/check-frontend.py` | Adapted for #219 and #365 (see below) |
 | `.gitignore` | The generated Xcode projects of `app/CouchPreview` and `app/MadeiraUIShell` |
 
 ## Community pull requests merged here
+
+**Now in Madeira too** (waves 1-3, synced 2026-10-24): #214, #215, #216, #223,
+#243, #349, #377, #382, #386, #389, #398, #399, #402, #403, #404, #413. They
+came back in through the sync as Madeira merged them, which supersedes the
+early copies. **Still only in this fork:** #219, #356, #357, #361, #365, #367,
+#412.
 
 These are open pull requests to Madeira, merged into this fork before Madeira
 merged them. Each keeps its author and commit message as written, except #386:
@@ -114,6 +123,25 @@ The workflow changes only its own checkout, never the repository:
   makedep's header-order check downgraded to a warning, so configure finishes.
 - **StikJIT:** `StikJIT.framework`'s Swift 6.4 module interface is rewritten to
   the older spelling, because the runner's Xcode 26 can't read it.
+
+### Madeira's host checks adapted to this fork's pull requests
+
+These checks are Madeira's own. Where a pull request merged only here changes
+the code a check reads, the check is adapted here, and marked "This fork" in
+the test:
+
+| Check | Why | Change |
+|---|---|---|
+| `check-lean-diag.py` | #219 makes the thread sampler wait in 200 × 100 ms ticks, running the stuck-store check, instead of `sleep(20)` | The harness stubs `ios_stuck_store_check`, counts 200 ticks as one 20 s period, and matches the "armed" line by its prefix |
+| `check-frontend.py` | #365: `LibraryEntry.applyEnvironment` passes arguments through `LaunchArgumentText` | The check also compiles `enum LaunchArgumentText` |
+
+Ten checks (`check-eco-native`, `check-power-probe`, `check-lean-diag`,
+`check-quiet-log`, `check-srv-direct`, `check-srv-eco-follow`,
+`check-srv-fd-reply`, `check-msc-unbounded-retry`, `check-x64-image-nocopy`,
+`check-vcruntime-mfc`) were written for a fork CI file named `build-ipa.yml`, and
+expect it to run them. This fork's workflow has that name, so it runs them in its
+macOS job. `check-vcruntime-mfc` also wants MFC's two DLLs fetched with the
+runtime: 14 in all.
 
 ## Syncing with Madeira
 
