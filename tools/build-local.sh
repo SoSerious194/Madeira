@@ -25,7 +25,7 @@
 #                         a free Personal Team cannot have it, so by default they are left out.
 #
 # Needs: Xcode with its iOS SDK and Metal toolchain, git, gh (to download the engine),
-#        sevenzip (brew install sevenzip) for tools/fetch-vcruntime.sh, Madeira's VC++ runtime fetcher.
+#        sevenzip, or cabextract and msitools (brew install cabextract msitools), to unpack Microsoft's VC++ runtime.
 # Disk: about 1-2 GB for the build, plus the engine (a few hundred MB, cached).
 set -euo pipefail
 
@@ -98,10 +98,22 @@ if [ -z "$ENGINE" ]; then
     if [ ! -f "$ENGINE_DIR/engine-libs.tgz" ]; then
         step "downloading the engine from $REPO run $RUN_ID (cached afterwards)"
         mkdir -p "$ENGINE_DIR"
-        gh run download "$RUN_ID" --repo "$REPO" --pattern 'madeira-engine-libs-*' -D "$ENGINE_DIR/dl" \
-            || die "run $RUN_ID has no engine artifact (older runs, or it expired after 14 days): run the workflow again"
-        mv "$(find "$ENGINE_DIR/dl" -name engine-libs.tgz | head -1)" "$ENGINE_DIR/engine-libs.tgz"
-        rm -rf "$ENGINE_DIR/dl"
+        ART=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[] | select(.name | startswith("madeira-engine-libs-")) | select(.expired | not) | .id' | head -1)
+        [ -n "$ART" ] || die "run $RUN_ID has no engine artifact (an older run, or it expired after 14 days): run the workflow again"
+        # gh's own download gives up on a stalled connection; curl resumes where it stopped.
+        # The storage link is short-lived, so ask for a fresh one on every attempt.
+        ZIP="$ENGINE_DIR/engine.zip"
+        for attempt in $(seq 1 40); do
+            URL=$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 30 -H "Authorization: Bearer $(gh auth token)" \
+                -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$REPO/actions/artifacts/$ART/zip" || true)
+            [ -n "$URL" ] || { sleep 5; continue; }
+            if curl -sS -L -C - --max-time 240 -o "$ZIP" "$URL" 2>/dev/null && unzip -tq "$ZIP" >/dev/null 2>&1; then break; fi
+            echo "    ($(( $(stat -f%z "$ZIP" 2>/dev/null || echo 0) / 1048576 )) MB so far; resuming)"
+        done
+        unzip -tq "$ZIP" >/dev/null 2>&1 || die "could not download the engine (the connection kept stalling); run the script again to resume"
+        unzip -qo "$ZIP" engine-libs.tgz -d "$ENGINE_DIR"
+        rm -f "$ZIP"
+        [ -f "$ENGINE_DIR/engine-libs.tgz" ] || die "the engine artifact has no engine-libs.tgz"
     else
         step "engine from run $RUN_ID (cached)"
     fi
@@ -130,11 +142,16 @@ step "placing the engine libraries"
 tar xzf "$ENGINE" -C "$ROOT" --exclude ENGINE_INFO.txt
 
 # ------------------------------------------------------ Microsoft's runtime
-# Madeira's own fetcher (unpacks Microsoft's vc_redist.x64.exe, verifies the files).
+# Microsoft's runtime: Madeira's own fetcher first (7zz), then a cabextract-based
+# fallback for installers whose payload 7zz cannot open.
 if [ "$(ls app/Madeira/x86_64-vcruntime/*.dll 2>/dev/null | wc -l | tr -d ' ')" -lt 14 ]; then
-    command -v 7zz >/dev/null || command -v 7z >/dev/null || die "7zz is needed to unpack Microsoft's runtime:  brew install sevenzip"
-    step "fetching Microsoft's VC++ runtime (tools/fetch-vcruntime.sh)"
-    bash tools/fetch-vcruntime.sh > "$WORK/vcruntime.log" 2>&1 || { tail -8 "$WORK/vcruntime.log" >&2; die "could not fetch the VC++ runtime"; }
+    step "fetching Microsoft's VC++ runtime"
+    if ! { command -v 7zz >/dev/null && bash tools/fetch-vcruntime.sh > "$WORK/vcruntime.log" 2>&1; }; then
+        echo "    (tools/fetch-vcruntime.sh did not work: $(grep -m1 -E '^error' "$WORK/vcruntime.log" 2>/dev/null || echo '7zz missing'); trying the cabextract fallback)"
+        command -v cabextract >/dev/null && command -v msiextract >/dev/null \
+            || die "to unpack Microsoft's runtime:  brew install cabextract msitools"
+        bash tools/fetch-vcruntime-cabextract.sh > "$WORK/vcruntime2.log" 2>&1 || { tail -8 "$WORK/vcruntime2.log" >&2; die "could not fetch the VC++ runtime"; }
+    fi
 fi
 bash build/stage-licenses.sh >/dev/null
 

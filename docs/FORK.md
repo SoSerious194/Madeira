@@ -133,14 +133,16 @@ tools/build-local.sh                # and install on the iPhone
 ```
 
 Needs, once: Xcode's Metal toolchain (`xcodebuild -downloadComponent
-MetalToolchain`) and `brew install sevenzip` (the script runs Madeira's
-`tools/fetch-vcruntime.sh` for Microsoft's VC++ runtime, which can't be in the
-public artifact). It shallow-
-clones just FEX's headers, about 50 MB. Change app or Couch mode code and the
+MetalToolchain`, about 840 MB) and Homebrew's `cabextract` and `msitools` (or
+`sevenzip` for Madeira's own `tools/fetch-vcruntime.sh`, which the script tries
+first). The script fetches Microsoft's VC++ runtime itself, because it can't be in
+the public artifact. Microsoft's current installer hides its payload from 7zz,
+which is why `tools/fetch-vcruntime-cabextract.sh` exists. It shallow-clones just FEX's headers, about 50 MB. Change app or Couch mode code and the
 rebuild is incremental. Change the engine (anything under `build/`, the
 submodules or the C and Objective-C in `app/Madeira`) and the script stops
 until you run the workflow again, or pass `--force-engine`. The engine is built
-with GitHub's iOS 26.2 SDK; the app is built with yours.
+with GitHub's iOS 26.2 SDK; the app is built with yours. A first build, with the
+engine cached, takes under two minutes.
 
 ### CI patches
 
