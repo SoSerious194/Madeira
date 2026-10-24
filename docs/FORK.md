@@ -45,8 +45,8 @@ list current when you add more.
 **Now in Madeira too** (waves 1-3, synced 2026-10-24): #214, #215, #216, #223,
 #243, #349, #377, #382, #386, #389, #398, #399, #402, #403, #404, #413. They
 came back in through the sync as Madeira merged them, which supersedes the
-early copies. **Still only in this fork:** #219, #356, #357, #361, #365, #367,
-#412.
+early copies. **Still only in this fork:** #219, #356, #357, #361, #365, #412.
+#367 was merged here, then reverted at the sync (see Held back).
 
 These are open pull requests to Madeira, merged into this fork before Madeira
 merged them. Each keeps its author and commit message as written, except #386:
@@ -89,6 +89,10 @@ Madeira reworked can conflict, so compare the two then.
   for Couch mode.
 - **#401, #405** conflict with this fork's tree.
 - **#228** is superseded by #349.
+- **#367** (session core from the PE machine) was reverted at the 2026-10-24
+  sync. Madeira's `check-launch-routing.py` keeps the name heuristic for 64-bit
+  targets on purpose, #367 was never reviewed upstream, and it matters only for
+  programs started by a bare file name. A sync brings it back if Madeira merges it.
 
 ## Building and installing on an iPhone
 
