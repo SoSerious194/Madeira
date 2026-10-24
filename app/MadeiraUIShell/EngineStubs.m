@@ -91,6 +91,7 @@ void madeira_set_fence_mode(int mode) { (void)mode; }
 int winios_drv_census_owner(void *hwnd, unsigned int *pid, unsigned int *style) { (void)hwnd; (void)pid; (void)style; return 0; }
 int winios_drv_foreground_if_owner(void *hwnd) { (void)hwnd; return 0; }
 void winios_drv_post_key(unsigned short vk, unsigned int flags) { (void)vk; (void)flags; }
+void winios_drv_post_text(unsigned int scalar, unsigned short vk, int shift) { (void)scalar; (void)vk; (void)shift; }
 void winios_drv_post_mouse(int x, int y, unsigned int flags, unsigned int mouse_data, void *hwnd) {
     (void)x; (void)y; (void)flags; (void)mouse_data; (void)hwnd;
 }

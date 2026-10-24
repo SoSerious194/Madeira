@@ -178,7 +178,7 @@ struct CouchHomeView: View {
         let column = focus.column(focus.shelf, in: shelves)
         games += row[max(0, column - 1)..<min(row.count, column + 3)]
         for index in [focus.shelf - 1, focus.shelf + 1] where shelves.indices.contains(index) {
-            if let game = shelves[index].games[safe: focus.column(index, in: shelves)] { games.append(game) }
+            if let game = shelves[index].games[couchSafe: focus.column(index, in: shelves)] { games.append(game) }
         }
         CouchImageCache.shared.prefetch(games.compactMap(\.hero), maxPixel: 1800)
         CouchImageCache.shared.prefetch(games.compactMap(\.logo), maxPixel: 900)
@@ -186,5 +186,6 @@ struct CouchHomeView: View {
 }
 
 private extension Array {
-    subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
+    // Not `safe:`: Madeira's LibraryGridZoom.swift declares that one app-wide.
+    subscript(couchSafe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }
