@@ -119,6 +119,29 @@ The script makes the provisioning profiles with Xcode when they're missing.
 Personal Team can't have the Increased Memory Limit capability, so with one,
 Madeira's Memory+ check stays red.
 
+### Building the app on your Mac instead
+
+The slow part of the build is the native engine; GitHub compiles it, and the
+workflow publishes it as the `madeira-engine-libs-N` artifact (14 days).
+`tools/build-local.sh` downloads the newest one that matches your checkout,
+builds only the app with your own Xcode, signs it with your team, and installs
+it on the connected iPhone. There's no unsigned IPA and no re-signing.
+
+```sh
+tools/build-local.sh --no-install   # build and sign only
+tools/build-local.sh                # and install on the iPhone
+```
+
+Needs, once: Xcode's Metal toolchain (`xcodebuild -downloadComponent
+MetalToolchain`) and `brew install sevenzip` (the script runs Madeira's
+`tools/fetch-vcruntime.sh` for Microsoft's VC++ runtime, which can't be in the
+public artifact). It shallow-
+clones just FEX's headers, about 50 MB. Change app or Couch mode code and the
+rebuild is incremental. Change the engine (anything under `build/`, the
+submodules or the C and Objective-C in `app/Madeira`) and the script stops
+until you run the workflow again, or pass `--force-engine`. The engine is built
+with GitHub's iOS 26.2 SDK; the app is built with yours.
+
 ### CI patches
 
 The workflow changes only its own checkout, never the repository:

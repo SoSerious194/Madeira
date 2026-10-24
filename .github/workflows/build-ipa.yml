@@ -518,6 +518,43 @@ jobs:
           [ -f app/Madeira/arm64ec-windows/dockhost.exe ] || MISSING="$MISSING app/Madeira/arm64ec-windows/dockhost.exe"
           [ -z "$MISSING" ] || { echo "::error::missing archives:$MISSING"; exit 1; }
 
+      # The compiled engine, for building the app on a Mac with tools/build-local.sh:
+      # the native libraries the Xcode project links, Madeira Dock's program and
+      # FEX's generated headers. No Microsoft files in it (the VC++ runtime is
+      # fetched on the Mac), so it is fine to keep in a public repository.
+      - name: Package the engine libraries
+        shell: bash
+        run: |
+          set -e
+          FILES="app/Madeira/libntdll_unix.a app/Madeira/libwineserver.a app/Madeira/libwin32u_unix.a
+                 app/Madeira/libdxmt_combined.a app/Madeira/libavformat.a app/Madeira/libavcodec.a
+                 app/Madeira/libswresample.a app/Madeira/libavutil.a app/Madeira/libmadeira_rppairing.a
+                 app/Madeira/arm64ec-windows/dockhost.exe app/Madeira/arm64ec-windows/dock-notices.txt
+                 FEX/build-ios/FEXCore/Source/libFEXCore.a FEX/build-ios/FEXCore/Source/libFEXCore_Base.a
+                 FEX/build-ios/FEXCore/Source/libJemallocLibs.a FEX/build-ios/External/cephes/libcephes_128bit.a
+                 FEX/build-ios/External/fmt/libfmt.a FEX/build-ios/External/SoftFloat-3e/libsoftfloat_3e.a
+                 FEX/build-ios/External/xxhash/cmake_unofficial/libxxhash.a"
+          [ -d FEX/build-ios/include ] && FILES="$FILES FEX/build-ios/include"
+          mkdir -p engine-out
+          {
+            echo "commit=$GITHUB_SHA"
+            echo "run=${{ github.run_number }}"
+            echo "ios_sdk=$(xcrun --sdk iphoneos --show-sdk-version)"
+            echo "xcode=$(xcodebuild -version | head -1)"
+            echo "wine=${{ steps.rev.outputs.wine }}"
+            echo "fex=${{ steps.rev.outputs.fex }}"
+            echo "dxmt=${{ steps.rev.outputs.dxmt }}"
+          } > engine-out/ENGINE_INFO.txt
+          cp engine-out/ENGINE_INFO.txt ENGINE_INFO.txt
+          tar czf engine-out/engine-libs.tgz $FILES ENGINE_INFO.txt
+          ls -la engine-out; tar tzf engine-out/engine-libs.tgz | wc -l | sed 's/^/files in the archive: /'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: madeira-engine-libs-${{ github.run_number }}
+          path: engine-out/
+          retention-days: 14
+
       - name: Stage licence copies
         run: bash build/stage-licenses.sh
 
