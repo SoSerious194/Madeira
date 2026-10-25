@@ -37,7 +37,7 @@ list current when you add more.
 | `app/Madeira/Onboarding.swift` | Setup offers Madeira Dock's client page once more when it was never shown and the client is missing (`offerDockClient`, `madeiraOnboardingDockClientOffered`); Couch mode's Play opens that page too |
 | `app/Madeira.xcodeproj/project.pbxproj` | The `CouchMode` and `Live` groups and their files (IDs `C1…`, `C2…`, `C4…`) |
 | `README.md` | Rewritten for the fork |
-| `tests/host/check-lean-diag.py`, `tests/host/check-frontend.py` | Adapted for #219 and #365 (see below) |
+| `tests/host/check-lean-diag.py`, `check-frontend.py`, `check-pool-placement.py`, `check-pool-low-images.py` | Adapted for #219, #365 and #358 (see below) |
 | `.gitignore` | The generated Xcode projects of `app/CouchPreview` and `app/MadeiraUIShell` |
 
 ## Community pull requests merged here
@@ -45,7 +45,7 @@ list current when you add more.
 **Now in Madeira too** (waves 1-3, synced 2026-10-24): #214, #215, #216, #223,
 #243, #349, #377, #382, #386, #389, #398, #399, #402, #403, #404, #413. They
 came back in through the sync as Madeira merged them, which supersedes the
-early copies. **Still only in this fork:** #219, #356, #357, #361, #365, #412.
+early copies. **Still only in this fork:** #219, #347, #356, #357, #358, #361, #365, #412.
 #367 was merged here, then reverted at the sync (see Held back).
 
 These are open pull requests to Madeira, merged into this fork before Madeira
@@ -78,16 +78,18 @@ Madeira reworked can conflict, so compare the two then.
 | [#365](https://github.com/willfaust/Madeira/pull/365) | James O'Hara (DeathKhan) | Launch arguments follow Windows quoting rules, fail closed, and lose iOS smart punctuation | 2026-10-23 | Cloud build |
 | [#382](https://github.com/willfaust/Madeira/pull/382) | wamei | Steam's download sheet shows each game's download size and size on disk | 2026-10-23 | `check-steam-library.py`: all but its two Linux-only compile checks pass |
 | [#386](https://github.com/willfaust/Madeira/pull/386) | Tomba247 | Guest reservations stay out of FEX's shared arena (Red Dead Redemption 2 reaches gameplay) | 2026-10-23 | Cloud build; needs a device run |
+| [#358](https://github.com/willfaust/Madeira/pull/358) | SirDank | JIT pool: a range left partly non-executable by an image copy goes back whole to the next copy of the same image (fingerprint of its layout), so restarted programs and shared DLLs don't take fresh pool each time | 2026-10-25 | Pool host checks, adapted (below); needs a device run |
+| [#347](https://github.com/willfaust/Madeira/pull/347) | 125hz | Controllers: XInput battery, a stale `XInputEnable(FALSE)` ignored while the window is in front, host pads as Windows.Gaming.Input gamepads by default (`MADEIRA_WGI_HOST_PADS`), keyboard focus on click or tap. Five commits. Ships rebuilt `xinput1_1`-`1_4.dll`; the battery part also wants a Wine change not merged upstream yet | 2026-10-25 | Gamepad host checks; needs a device run with a controller |
 | [#219](https://github.com/willfaust/Madeira/pull/219) | spitefulowl | Swap tier freezes on low-RAM devices (Ori and the Will of the Wisps): page-crossing stores into aliased and swap-backed pages complete per page, the swap file is punched off the virtual lock, dead ranges' dirty pages are discarded first, and a range whose punch failed is never reused. Five commits, cherry-picked; conflicts with later upstream code resolved by keeping both (`server_ios.c`'s sampler loop keeps upstream's `MADEIRA_LEAN_DIAG` guard around the PR's 100 ms stuck-store ticks) | 2026-10-24 | `check-swap-coverage.py` (Linux job in the workflow); needs a device run with the swap tier on |
 | [#399](https://github.com/willfaust/Madeira/pull/399) | Jelly-RayTian | ntdll builds with iOS SDKs that lack `rusage_info_v6.ri_page_wait_time_mach` (diagnostic only; logs `pgw=-1.0` then). Needed for the GitHub Actions build, whose newest SDK is iOS 26.2 | 2026-10-23 | `check-rusage-sdk.py` passes |
 
 ### Held back
 
 - **#368** needs a matching change in Madeira's Wine fork; it can't come in alone.
-- **#347** (controllers: XInput battery, host pads in Windows.Gaming.Input) ships
-  prebuilt DLLs; it waits for a device test of the controller path. It matters
-  for Couch mode.
-- **#401, #405** conflict with this fork's tree.
+- **#426, #427, #411** need matching changes in Madeira's Wine fork (wine#56,
+  wine#57, wine#52) to do anything, or are opt-in only.
+- **#210** (x87 off means full precision) changes the default for every game;
+  Madeira's maintainers should decide that.
 - **#228** is superseded by #349.
 - **#367** (session core from the PE machine) was reverted at the 2026-10-24
   sync. Madeira's `check-launch-routing.py` keeps the name heuristic for 64-bit
@@ -163,6 +165,7 @@ the test:
 |---|---|---|
 | `check-lean-diag.py` | #219 makes the thread sampler wait in 200 × 100 ms ticks, running the stuck-store check, instead of `sleep(20)` | The harness stubs `ios_stuck_store_check`, counts 200 ticks as one 20 s period, and matches the "armed" line by its prefix |
 | `check-frontend.py` | #365: `LibraryEntry.applyEnvironment` passes arguments through `LaunchArgumentText` | The check also compiles `enum LaunchArgumentText` |
+| `check-pool-placement.py`, `check-pool-low-images.py` | #358 gives the pool's free-list and ledger entries a `tag` field and `ios_pool_alloc_range_ex` a tag argument | The harnesses' struct copies and calls get the field and a 0 (untagged) argument; `check-pool-low-images` also expects `ios_pool_alloc_range_tagged` in the image allocation and stubs `ios_pool_image_tag` |
 
 Ten checks (`check-eco-native`, `check-power-probe`, `check-lean-diag`,
 `check-quiet-log`, `check-srv-direct`, `check-srv-eco-follow`,
