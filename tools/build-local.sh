@@ -98,12 +98,17 @@ if [ -z "$ENGINE" ]; then
     if [ ! -f "$ENGINE_DIR/engine-libs.tgz" ]; then
         step "downloading the engine from $REPO run $RUN_ID (cached afterwards)"
         mkdir -p "$ENGINE_DIR"
-        ART=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[] | select(.name | startswith("madeira-engine-libs-")) | select(.expired | not) | .id' | head -1)
+        ART_INFO=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[] | select(.name | startswith("madeira-engine-libs-")) | select(.expired | not) | "\(.id) \(.size_in_bytes)"' | head -1)
+        ART=${ART_INFO% *}; ART_SIZE=${ART_INFO#* }
         [ -n "$ART" ] || die "run $RUN_ID has no engine artifact (an older run, or it expired after 14 days): run the workflow again"
         # gh's own download gives up on a stalled connection; curl resumes where it stopped.
         # The storage link is short-lived, so ask for a fresh one on every attempt.
         ZIP="$ENGINE_DIR/engine.zip"
         for attempt in $(seq 1 40); do
+            # A file as big as the artifact that still fails its check is damaged (an
+            # earlier download was writing to it too): start over rather than resume.
+            have=$(stat -f%z "$ZIP" 2>/dev/null || echo 0)
+            if [ "$have" -ge "$ART_SIZE" ] && ! unzip -tq "$ZIP" >/dev/null 2>&1; then rm -f "$ZIP"; fi
             URL=$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 30 -H "Authorization: Bearer $(gh auth token)" \
                 -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$REPO/actions/artifacts/$ART/zip" || true)
             [ -n "$URL" ] || { sleep 5; continue; }
